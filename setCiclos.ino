@@ -14,7 +14,7 @@ void loop(){
 }
 
 
-void velocidade(){
+void ciclos(){
   int ciclosI = 0;
   bool rodando = LOW;
   while(rodando == LOW){

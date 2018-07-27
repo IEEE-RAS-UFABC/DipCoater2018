@@ -14,7 +14,7 @@ void loop(){
 }
 
 
-void ciclos(){
+void funcCiclos(){
   int ciclosI = 0;
   bool rodando = LOW;
   while(rodando == LOW){

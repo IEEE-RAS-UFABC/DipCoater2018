@@ -27,7 +27,7 @@ void funcCiclos(){
     delay(200);
     if(digitalRead(botaoSelecionar)){
       rodando = HIGH;
-      ciclosTDeFuncionamento = ciclosI;
+      ciclosDeFuncionamento = ciclosI;
     }
     if(digitalRead(botaoVoltar)){
       rodando = HIGH;

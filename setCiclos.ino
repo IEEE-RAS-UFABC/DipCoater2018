@@ -2,7 +2,7 @@
 LiquidCrystal lcd(2,3,4,5,6,7); //aqui já existem no 
 const int botaoSelecionar = 9; //programa do menu
 const int botaoVoltar = 10;
-int ciclosTotaisDeFuncionamento = 0; //essa constante deve ser o mesmo usado 
+int ciclosDeFuncionamento = 0; //essa constante deve ser o mesmo usado 
 //nas funções do que vao girar os motores de passo
 
 int encoder(); //chamando a funcao encoder
@@ -27,7 +27,7 @@ void ciclos(){
     delay(200);
     if(digitalRead(botaoSelecionar)){
       rodando = HIGH;
-      ciclosTotaisDeFuncionamento = ciclosI;
+      ciclosTDeFuncionamento = ciclosI;
     }
     if(digitalRead(botaoVoltar)){
       rodando = HIGH;

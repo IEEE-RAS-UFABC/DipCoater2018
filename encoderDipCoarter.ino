@@ -34,26 +34,58 @@ int encoder() {
   
   //estados novo e comparado com o antigo
   if(estado1 == oldEstado1){
-    if(oldEstado2 == LOW && estado2 == HIGH){
-      return 1; //caso rotacao horaria
+    if(estado1 == HIGH){
+    	if(oldEstado2 == LOW && estado2 == HIGH){
+     	 oldEstado1 = estado1;
+  	 	 oldEstado2 = estado2;
+     	 return 1; //caso rotacao horaria
+    	}
+    	if(oldEstado2 == HIGH && estado2 == LOW){
+      	oldEstado1 = estado1;
+  	  	oldEstado2 = estado2;
+      	return -1; //caso rotacao antihoraria
+        }
     }
-    if(oldEstado2 == HIGH && estado2 == LOW){
-      return -1; //caso rotacao antihoraria
+    else{
+    	if(oldEstado2 == LOW && estado2 == HIGH){
+     	 oldEstado1 = estado1;
+  	 	 oldEstado2 = estado2;
+     	 return -1; //caso rotacao horaria
+    	}
+    	if(oldEstado2 == HIGH && estado2 == LOW){
+      	oldEstado1 = estado1;
+  	  	oldEstado2 = estado2;
+      	return 1; //caso rotacao antihoraria
+        }
     }
   }
   if(estado2 == oldEstado2){
-    if(oldEstado1 == LOW && estado1 == HIGH){
-      return 1;
+    if(estado2 == HIGH){
+    	if(oldEstado1 == LOW && estado1 == HIGH){
+    	  oldEstado1 = estado1;
+    	  oldEstado2 = estado2;
+      	  return -1;
+    	}
+    	if(oldEstado1 == HIGH && estado1 == LOW){
+      		oldEstado1 = estado1;
+  	  		oldEstado2 = estado2;
+      	return 1;
+        }     
     }
-    if(oldEstado1 == HIGH && estado1 == LOW){
-      return -1;
+    else{
+    	if(oldEstado1 == LOW && estado1 == HIGH){
+    	  oldEstado1 = estado1;
+    	  oldEstado2 = estado2;
+      	  return 1;
+    	}
+    	if(oldEstado1 == HIGH && estado1 == LOW){
+      		oldEstado1 = estado1;
+  	  		oldEstado2 = estado2;
+      	return -1;
+        }
     }
   }
-  else{
-    return 0; //caso sem mudanca de estado
-  }
-  
-  oldEstado1 = estado1; //estados sao salvos como antigos
+  oldEstado1 = estado1; 
   oldEstado2 = estado2;
-
+  return 0; //caso sem mudanca de estado
 }

@@ -4,10 +4,9 @@
 #include <LiquidCrystal.h>
 
 //dados iniciais para stepper
-const int stepPinTopo = 9; //vaai ter que alterar os pinos e parte do codigo para usar pino maior que 7
-const int stepPinBase = 10;
-const int dirPin = 3;
-const int actPin = 4;//not used
+const int stepPinTopo = 10; //vaai ter que alterar os pinos e parte do codigo para usar pino maior que 7
+const int stepPinBase = 11;
+const int dirPin = 12;
 const float motorAngle = 1.8; //já esta configurado para o nosso motor
 const float stepSize = 0.03125;//full=1, half=0.5, quarter=0.25, etc...
 
@@ -30,17 +29,17 @@ int   banhosDeFuncionamento = 1;
 
 //dados iniciais para encoder
 int semovido = 0;
-const int encoderPino1 = 22; //pinos usados pelo encoder
-const int encoderPino2 = 23;
+const int encoderPino1 = 30; //pinos usados pelo encoder
+const int encoderPino2 = 31;
 
 //dados iniciais botões
-const int botaoSelecionar = 30;
-const int botaoVoltar = 31;
-const int fimDeCurcoTopo = 34;
-const int fimDeCurcoBase = 35;
+const int botaoSelecionar = 34;
+const int botaoVoltar = 35;
+const int fimDeCurcoTopo = 38;
+const int fimDeCurcoBase = 39;
 
 // initialize the library with the numbers of the interface pins
-LiquidCrystal lcd (2, 3, 4, 5, 6, 7);
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
 int linha = 0, option =1;
 
 //adaptado para ler do teclado, substituir por botões
@@ -71,7 +70,7 @@ void setup() {
   //pinos encoder
   pinMode(encoderPino1, INPUT);
   pinMode(encoderPino2, INPUT);
-  
+  Serial.println("sim to ligado");
 }
 
 void loop(){
@@ -107,6 +106,8 @@ void loop(){
       }
   semovido = encoder();
   if(semovido != 0){
+    Serial.println("moveu");
+    Serial.println(semovido);
      linha = linha + semovido;
      semovido=0;
      lcd.clear();
@@ -416,34 +417,38 @@ int encoder() {
   bool estado2;
 
   //leitura dos novos estados dos pinos
+  //Serial.println("testando encoder");
   estado1 = digitalRead(encoderPino1);
   estado2 = digitalRead(encoderPino2);
+  //Serial.println(estado1);
+  //Serial.println(estado2);
   
   //estados novo e comparado com o antigo
-  if(estado1 == oldEstado1){
-    if(oldEstado2 == LOW && estado2 == HIGH){
-      return 1; //caso rotacao horaria
-    }
-    if(oldEstado2 == HIGH && estado2 == LOW){
-      return -1; //caso rotacao antihoraria
-    }
-  }
-  if(estado2 == oldEstado2){
-    if(oldEstado1 == LOW && estado1 == HIGH){
-      return 1;
-    }
-    if(oldEstado1 == HIGH && estado1 == LOW){
-      return -1;
-    }
-  }
-  else{
-    return 0; //caso sem mudanca de estado
-  }
-  
-  oldEstado1 = estado1; //estados sao salvos como antigos
+   if(oldEstado1 == HIGH && oldEstado2 == HIGH && estado1 == LOW && estado2 == LOW){
+     oldEstado1 = estado1;
+     oldEstado2 = estado2;
+     Serial.println(estado1);
+     Serial.println(estado2);
+     Serial.println(oldEstado1);
+     Serial.println(oldEstado2);
+     return -1; //caso rotacao antihoraria
+     }
+     if(oldEstado1 == HIGH && oldEstado2 == LOW && estado1 == LOW && estado2 == LOW){
+     oldEstado1 = estado1;
+     oldEstado2 = estado2;
+     Serial.println(estado1);
+     Serial.println(estado2);
+     Serial.println(oldEstado1);
+     Serial.println(oldEstado2);
+     return 1; //caso rotacao antihoraria
+     }
+  oldEstado1 = estado1; 
   oldEstado2 = estado2;
-
+  
+  return 0; //caso sem mudanca de estado
 }
+
+
 
 void stepperRotate(float rotation, float rpm, bool motor) {
   if (rotation > 0) {

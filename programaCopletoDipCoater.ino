@@ -83,7 +83,8 @@ void loop(){
     lcd.print(menu[1]);
       
       if(digitalRead(botaoSelecionar) == HIGH){   //tecla "ENTER"
-                  
+        while(digitalRead(botaoSelecionar) == HIGH){
+        }          
           if(readOption.equals(menu[0])){ //se cursor estiver na opcao Start programa começa
           
             Serial.println("Programa começou");
@@ -169,7 +170,8 @@ void Submenu(bool voltar){
 
       //verifica em qual opcao setada no cursor (primeira linha) e entra na função
       else if(digitalRead(botaoSelecionar) == HIGH){ 
-        
+        while(digitalRead(botaoSelecionar) == HIGH){
+        }
         switch (opt) {
 
           case 1:

@@ -237,8 +237,8 @@ void funcStart(){
   while(digitalRead(fimDeCurcoBase) == LOW){
     stepperRotate(-0.07, 60, LOW);
   }
-  for(int cicloAtual; cicloAtual < ciclosDeFuncionamento; cicloAtual++){ 
-    for(int banhoAtual; banhoAtual < banhosDeFuncionamento; banhoAtual++){
+  for(int cicloAtual = 0; cicloAtual < ciclosDeFuncionamento; cicloAtual++){ 
+    for(int banhoAtual = 0; banhoAtual < banhosDeFuncionamento; banhoAtual++){
       stepperRotate((alturaDeFuncionamento/2), velocidadeDeFuncionamento, HIGH);
       delay(tempoDeBanhoDeFuncionamento);
       while(digitalRead(fimDeCurcoTopo) == LOW){

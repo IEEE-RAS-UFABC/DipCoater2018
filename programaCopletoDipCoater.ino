@@ -415,7 +415,7 @@ int encoder() {
   static bool oldEstado2; //variaveis com o prefixo static tem seus dados mantidos mesmo quando a função acaba
   bool estado1; //novos estados dos pinos
   bool estado2;
-  while(digitalRead(encoderPino1) == LOW && igitalRead(encoderPino2) == LOW){
+  while(not(digitalRead(encoderPino1) == HIGH || igitalRead(encoderPino2) == HIGH)){
   //leitura dos novos estados dos pinos
   //Serial.println("testando encoder");
   estado1 = digitalRead(encoderPino1);

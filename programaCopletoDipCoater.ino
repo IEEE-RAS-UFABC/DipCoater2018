@@ -2,6 +2,7 @@
 
 // include the library code:
 #include <LiquidCrystal.h>
+#include <Encoder.h>
 
 //dados iniciais para stepper
 const int stepPinTopo = 10; //vaai ter que alterar os pinos e parte do codigo para usar pino maior que 7
@@ -11,26 +12,26 @@ const float motorAngle = 1.8; //já esta configurado para o nosso motor
 const float stepSize = 0.03125;//full=1, half=0.5, quarter=0.25, etc...
 
 //dados iniciais para menu
+bool saiu;
 char* menu [] = {"Start Padrao", "Menu"};
-char* optionSubMenu [] = {"Start", "Velocidade", "Ciclos", "Altura", "Tempo banho", "Tempo Secagem", "Voltar"};
+char* optionSubMenu [] = {"Start", "Velocidade", "Ciclos","banhos", "Altura", "Tempo banho", "Tempo Secagem", "padroes"};
 char* padroes [] = {"Padrão 1",  "Padrão 2", "Padrão 3"};
 char* beckers [] = {"Becker 1",  "Becker 2", "Becker 3" , "Becker 4"};
-int variavel [] = {1, 2, 3, 4, 5,6,7};
+int variavel [] = {1, 2, 3, 4, 5,6,7,8};
 int opt;
 String readOption = "Start Padrao";
 
 //dados iniciais para "start"
 int   velocidadeDeFuncionamento = 20; //iniciando variaveis de Funcionamento em valores seguros
-int   tempoDeBanhoDeFuncionamento = 2;
-int   tempoDeSecagemDeFuncionamento = 2;
+int   tempoDeBanhoDeFuncionamento = 1000;
+int   tempoDeSecagemDeFuncionamento = 1000;
 int   ciclosDeFuncionamento = 2;
 int   alturaDeFuncionamento = 5;
-int   banhosDeFuncionamento = 1;
+int   banhosDeFuncionamento = 2;
 
 //dados iniciais para encoder
 int semovido = 0;
-const int encoderPino1 = 30; //pinos usados pelo encoder
-const int encoderPino2 = 31;
+Encoder myEnc(30, 31);
 
 //dados iniciais botões
 const int botaoSelecionar = 34;
@@ -40,7 +41,7 @@ const int fimDeCurcoBase = 39;
 
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
-int linha = 0, option =1;
+int linha = 0, option =0;
 
 //adaptado para ler do teclado, substituir por botões
 char tecla_pressionada = ' ';
@@ -67,15 +68,12 @@ void setup() {
   Serial.begin(9600);
   lcd.begin(16, 3);
 
-  //pinos encoder
-  pinMode(encoderPino1, INPUT);
-  pinMode(encoderPino2, INPUT);
   Serial.println("sim to ligado");
 }
 
 void loop(){
-      
-  lcd.setCursor(0,linha);
+
+    lcd.setCursor(0,linha);
     lcd.print(">");                        //teste da flag sub_menu
     lcd.setCursor(1,0);
     lcd.print(menu[0]);
@@ -107,11 +105,12 @@ void loop(){
       }
   semovido = encoder();
   if(semovido != 0){
-    Serial.println("moveu");
-    Serial.println(semovido);
+   /* Serial.println("moveu");
+    Serial.println(semovido);*/
      linha = linha + semovido;
      semovido=0;
      lcd.clear();
+     delay(25);
     if(linha>1){
       linha = 0;
     }
@@ -141,13 +140,14 @@ void Submenu(bool voltar){
   while(!voltar){   //enquanto voltar for falso fica lendo cursor das opcoes
       //Faz as opções do cursos "andar"
       semovido = encoder();
-      if(semovido != 0){
+      if(semovido != 0 || saiu == HIGH){
+        saiu = LOW;
         option = option + semovido;
-        if(option > 5){           
+        if(option > 7){           
           option = 0;            
         }        
-        if(option < 1){
-          option = 5;
+        if(option < 0){
+          option = 7;
         }
         
         lcd.clear();
@@ -165,11 +165,11 @@ void Submenu(bool voltar){
         Serial.println(option);
 
         //verifica qual opção escolhida na primeira linha do menu
-         opt = variavel[option];     
+              
       }
-
+      opt = variavel[option];
       //verifica em qual opcao setada no cursor (primeira linha) e entra na função
-      else if(digitalRead(botaoSelecionar) == HIGH){ 
+      if(digitalRead(botaoSelecionar) == HIGH){ 
         while(digitalRead(botaoSelecionar) == HIGH){
         }
         switch (opt) {
@@ -190,27 +190,33 @@ void Submenu(bool voltar){
           break;
 
           case 4:
-          funcAltura();
+          funcBanhos();
           delay(50);
           break;
 
           case 5:
-          funcTempoDeBanho();
+          funcAltura();
           delay(50);
           break;
 
           case 6:
-          funcTempoDeSecagem();
+          funcTempoDeBanho();
           delay(50);
           break;
 
           case 7:
-          voltar = true;
+          funcTempoDeSecagem();
+          delay(50);
+          break;
+
+          case 8:
+          funcPadroes();
           delay(50);
           break;
 
         default:
           Serial.println("Opcao invalida");
+          Serial.println(opt);
       }
         /*
          Serial.println(optionSubMenu[option]);        
@@ -223,160 +229,311 @@ void Submenu(bool voltar){
         }
         */
       }
-      
-      else Serial.println("NONE");
-            
-     
+      if(digitalRead(botaoVoltar) == HIGH){ 
+          while(digitalRead(botaoVoltar) == HIGH){
+           }
+          voltar=HIGH;
+          lcd.clear();
+          delay(25);
+      }
   }
 }
-
+void funcPadroes(){
+  
+}
 void funcStart(){
+  Serial.println("programa rodando");
+  Serial.print("velocidade ");
+  Serial.println(velocidadeDeFuncionamento);
+  Serial.print("altura ");
+  Serial.println(alturaDeFuncionamento);
+  Serial.print("ciclos ");
+  Serial.println(ciclosDeFuncionamento);
+  Serial.print("banhos ");
+  Serial.println(banhosDeFuncionamento);
+  Serial.print("tempo de banho");
+  Serial.println(tempoDeBanhoDeFuncionamento);
+  Serial.print("tempo de secagem ");
+  Serial.println(tempoDeSecagemDeFuncionamento);
+   lcd.clear();
+   delay(50);
+   lcd.setCursor(0,0);
+   lcd.print("Programa rodando");    
   while(digitalRead(fimDeCurcoTopo) == LOW){
     stepperRotate(-0.07, 30, HIGH); //anti horario sobe
   }
+  lcd.clear();
+  delay(50);
+  lcd.setCursor(1,0);
+  lcd.print("Eixo vertical");
+  lcd.setCursor(1,1);
+  lcd.print("calibrado");
   while(digitalRead(fimDeCurcoBase) == LOW){
-    stepperRotate(-0.07, 60, LOW);
+    stepperRotate(-0.07, 30, LOW);
   }
-  for(int cicloAtual = 0; cicloAtual < ciclosDeFuncionamento; cicloAtual++){ 
+  lcd.clear();
+  delay(50);
+  lcd.setCursor(1,0);
+  lcd.print("Base calibrada");
+  for(int cicloAtual = 0; cicloAtual < ciclosDeFuncionamento;cicloAtual++){   
     for(int banhoAtual = 0; banhoAtual < banhosDeFuncionamento; banhoAtual++){
+      lcd.clear();
+      delay(50);
+      lcd.setCursor(0,0);
+      lcd.print("Ciclo");
+      lcd.setCursor(6,0);
+      lcd.print(cicloAtual +1); 
+      lcd.setCursor(0,1);
+      lcd.print("banho");
+      lcd.setCursor(6,1);
+      lcd.print(banhoAtual +1);
+      lcd.setCursor(9,1);
+      lcd.print("v");
       stepperRotate((alturaDeFuncionamento/2), velocidadeDeFuncionamento, HIGH);
+      lcd.setCursor(9,1);
+      lcd.print(" ");
+      Serial.println("esperando banho");
       delay(tempoDeBanhoDeFuncionamento);
+      Serial.println("acabou");
+      
       while(digitalRead(fimDeCurcoTopo) == LOW){
+        lcd.setCursor(9,1);
+        lcd.print("^");
         stepperRotate(-0.07, velocidadeDeFuncionamento, HIGH);
+        lcd.setCursor(9,1);
+        lcd.print(" ");
       }
+      Serial.println("esperando secagem");
       delay(tempoDeSecagemDeFuncionamento);
-      stepperRotate((5/4), 60, LOW);   
+      Serial.println("acabou");
+      lcd.setCursor(9,0);
+      lcd.print("->");
+      stepperRotate(1.25, 30, LOW);
+      lcd.setCursor(9,0);
+      lcd.print("  ");  
     }
     while(digitalRead(fimDeCurcoBase) == LOW){
-        stepperRotate(-0.07, 60, LOW);
-      }
+      lcd.setCursor(9,0);
+      lcd.print("<-");
+      stepperRotate(-0.07, 30, LOW);
+      lcd.setCursor(9,0);
+      lcd.print("  ");
+    }
   }
-
+lcd.clear();
+delay(50);
+lcd.setCursor(0,0);
+lcd.print("prog terminado");
+delay(1000);
+lcd.clear();
+delay(50);
+saiu = HIGH;
+Serial.print("Final");
 }
 void funcVelocidade(){
+  int mudouuu;
   int velocidadeI = 0;
   bool rodando = LOW;
+  lcd.clear();
+      delay(50);
+      lcd.setCursor(0,0);
+      lcd.print("Set velocidade");
+      lcd.setCursor(0, 1);
+      lcd.print("(cm/min)");
+      lcd.setCursor(10,1);
+      lcd.print(velocidadeI, DEC); 
   while(rodando == LOW){
-    velocidadeI = velocidadeI + encoder();
-    if(velocidadeI>300){
-      velocidadeI = 300;
+    mudouuu = encoder();
+    if(mudouuu != 0){
+      velocidadeI = velocidadeI + mudouuu;
+      if(velocidadeI>300){
+        velocidadeI = 300;
+      }
+      if(velocidadeI<1){
+        velocidadeI = 1;
+      }
+      lcd.clear();
+      delay(50);
+      lcd.setCursor(0,0);
+      lcd.print("Set velocidade");
+      lcd.setCursor(0, 1);
+      lcd.print("(cm/min)");
+      lcd.setCursor(10,1);
+      lcd.print(velocidadeI, DEC);  
     }
-    if(velocidadeI<1){
-      velocidadeI = 1;
-    };
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Set velocidade");
-    lcd.setCursor(0, 1);
-    lcd.print("(cm/min)");
-    lcd.setCursor(10,1);
-    lcd.print(velocidadeI, DEC);
-    delay(200);
     if(digitalRead(botaoSelecionar)){
+      while(digitalRead(botaoSelecionar) == HIGH){
+      }
       rodando = HIGH;
       velocidadeDeFuncionamento = velocidadeI;
     }
     if(digitalRead(botaoVoltar)){
+      while(digitalRead(botaoVoltar) == HIGH){
+      }
       rodando = HIGH;
     }
 }
+saiu = HIGH;
 }
 void funcCiclos(){
+  int mudouuu;
   int ciclosI = 0;
   bool rodando = LOW;
+  lcd.clear();
+      delay(25);
+      lcd.setCursor(0,0);
+      lcd.print("ciclos totais");
+      lcd.setCursor(0, 1);
+      lcd.print(ciclosI, DEC); 
   while(rodando == LOW){
-    ciclosI = ciclosI + encoder();
-    if(ciclosI<1){
-      ciclosI = 1;
+    mudouuu = encoder();
+    if(mudouuu != 0){
+      ciclosI = ciclosI + mudouuu;
+      if(ciclosI<1){
+        ciclosI = 1;
+      }
+      lcd.clear();
+      delay(25);
+      lcd.setCursor(0,0);
+      lcd.print("ciclos totais");
+      lcd.setCursor(0, 1);
+      lcd.print(ciclosI, DEC); 
     }
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("ciclos totais");
-    lcd.setCursor(0, 1);
-    lcd.print(ciclosI, DEC);
-    delay(200);
     if(digitalRead(botaoSelecionar)){
+      while(digitalRead(botaoSelecionar) == HIGH){
+      }
       rodando = HIGH;
       ciclosDeFuncionamento = ciclosI;
     }
     if(digitalRead(botaoVoltar)){
+      while(digitalRead(botaoVoltar) == HIGH){
+      }
       rodando = HIGH;
     }
   }
+  saiu = HIGH;
 }
 void funcAltura(){
+  int mudouuu;
   int alturaI = 0;
   bool rodando = LOW;
+  lcd.clear();
+      delay(25);
+      lcd.setCursor(0,0);
+      lcd.print("Set altura");
+      lcd.setCursor(0, 1);
+      lcd.print("cm");
+      lcd.setCursor(8,1);
+      lcd.print(alturaI, DEC);
   while(rodando == LOW){
-    alturaI = alturaI + encoder();
-    if(alturaI>240){
-      alturaI = 240;
-    }
-    if(alturaI<1){
-      alturaI = 1;
-    }
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Set altura");
-    lcd.setCursor(0, 1);
-    lcd.print("cm");
-    lcd.setCursor(8,1);
-    lcd.print(alturaI, DEC);
-    delay(200);
+      
+    mudouuu = encoder();
+    if(mudouuu != 0){
+      alturaI = alturaI + mudouuu;
+      if(alturaI>240){
+        alturaI = 240;
+      }
+      if(alturaI<1){
+        alturaI = 1;
+      }
+      lcd.clear();
+      delay(25);
+      lcd.setCursor(0,0);
+      lcd.print("Set altura");
+      lcd.setCursor(0, 1);
+      lcd.print("cm");
+      lcd.setCursor(8,1);
+      lcd.print(alturaI, DEC);    
+     }
     if(digitalRead(botaoSelecionar)){
+      while(digitalRead(botaoSelecionar) == HIGH){
+      }
       rodando = HIGH;
       alturaDeFuncionamento = alturaI;
     }
     if(digitalRead(botaoVoltar)){
+      while(digitalRead(botaoVoltar) == HIGH){
+      }
       rodando = HIGH;
     }
-}
+  }
+  saiu = HIGH;
 }
 void funcTempoDeBanho(){
+  int mudouuu;
   int tempoI = 0;
   bool rodando = LOW;
+  lcd.clear();
+      delay(25);
+      lcd.setCursor(0,0);
+      lcd.print("tempo de banho");
+      lcd.setCursor(0, 1);
+      lcd.print(tempoI, DEC);
   while(rodando == LOW){
-    tempoI = tempoI + encoder();
-    if(tempoI<1){
-      tempoI = 1;
+    mudouuu = encoder();
+    if(mudouuu != 0){
+      tempoI = tempoI + mudouuu;
+      if(tempoI<1){
+        tempoI = 1;
+      }
+      lcd.clear();
+      delay(25);
+      lcd.setCursor(0,0);
+      lcd.print("tempo de banho");
+      lcd.setCursor(0, 1);
+      lcd.print(tempoI, DEC);
     }
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("tempo de banho");
-    lcd.setCursor(0, 1);
-    lcd.print(tempoI, DEC);
-    delay(200);
     if(digitalRead(botaoSelecionar)){
+      while(digitalRead(botaoSelecionar) == HIGH){
+      }
       rodando = HIGH;
-      tempoDeBanhoDeFuncionamento = tempoI;
+      tempoDeBanhoDeFuncionamento = tempoI*1000;
     }
     if(digitalRead(botaoVoltar)){
+      while(digitalRead(botaoVoltar) == HIGH){
+      }
       rodando = HIGH;
     }
   }
+  saiu = HIGH;
 }
 void funcTempoDeSecagem(){
+  int mudouuu;
   int tempoI = 0;
   bool rodando = LOW;
+  lcd.clear();
+      delay(25);
+      lcd.setCursor(0,0);
+      lcd.print("tempo de Secagem");
+      lcd.setCursor(0, 1);
+      lcd.print(tempoI, DEC);
   while(rodando == LOW){
-    tempoI = tempoI + encoder();
-    if(tempoI<1){
-      tempoI = 1;
+    mudouuu = encoder();
+    if(mudouuu != 0){
+      tempoI = tempoI + mudouuu;
+      if(tempoI<1){
+        tempoI = 1;
+      }
+      lcd.clear();
+      delay(25);
+      lcd.setCursor(0,0);
+      lcd.print("tempo de Secagem");
+      lcd.setCursor(0, 1);
+      lcd.print(tempoI, DEC);
     }
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("tempo de Secagem");
-    lcd.setCursor(0, 1);
-    lcd.print(tempoI, DEC);
-    delay(200);
     if(digitalRead(botaoSelecionar)){
+      while(digitalRead(botaoSelecionar) == HIGH){
+      }
       rodando = HIGH;
-      tempoDeSecagemDeFuncionamento = tempoI;
+      tempoDeSecagemDeFuncionamento = tempoI*1000;
     }
     if(digitalRead(botaoVoltar)){
+      while(digitalRead(botaoVoltar) == HIGH){
+      }
       rodando = HIGH;
     }
   }
+  saiu = HIGH;
 }
 void funcPadrao(){
   Serial.print("Inicia a função PADRAO");
@@ -384,68 +541,63 @@ void funcPadrao(){
 }
 
 void funcBanhos(){//seta quantidade de banhos
+  int mudouuu;
   int banhoI = 0;
   bool rodando = LOW;
+  lcd.clear();
+      delay(25);
+      lcd.setCursor(1,0);
+      lcd.print("quantidade de");
+      lcd.setCursor(1, 1);
+      lcd.print("banhos");
+      lcd.setCursor(9, 1);
+      lcd.print(banhoI, DEC);
   while(rodando == LOW){
-    banhoI = banhoI + encoder();
-    if(banhoI>4){
-      banhoI = 1;
+    mudouuu = encoder();
+    if(mudouuu != 0){
+      banhoI = banhoI + mudouuu;
+      if(banhoI>4){
+        banhoI = 1;
+      }
+      if(banhoI<1){
+        banhoI = 4;
+      }
+      lcd.clear();
+      delay(25);
+      lcd.setCursor(1,0);
+      lcd.print("quantidade de");
+      lcd.setCursor(1, 1);
+      lcd.print("banhos");
+      lcd.setCursor(9, 1);
+      lcd.print(banhoI, DEC);
     }
-    if(banhoI<1){
-      banhoI = 4;
-    }
-    lcd.clear();
-    lcd.setCursor(1,0);
-    lcd.print("quantidade de");
-    lcd.setCursor(1, 1);
-    lcd.print("banhos");
-    lcd.setCursor(9, 1);
-    lcd.print(banhoI, DEC);
-    delay(200);
     if(digitalRead(botaoSelecionar)){
+      while(digitalRead(botaoSelecionar) == HIGH){
+      }
       rodando = HIGH;
       banhosDeFuncionamento = banhoI;
     }
     if(digitalRead(botaoVoltar)){
+      while(digitalRead(botaoVoltar) == HIGH){
+      }
       rodando = HIGH;
     }
   }
+  saiu = HIGH;
 }
 
 int encoder() {
-  static bool oldEstado1; //estados anteriores dos pinos do encoder
-  static bool oldEstado2; //variaveis com o prefixo static tem seus dados mantidos mesmo quando a função acaba
-  bool estado1; //novos estados dos pinos
-  bool estado2;
-  while(not(digitalRead(encoderPino1) == HIGH || igitalRead(encoderPino2) == HIGH)){
-  //leitura dos novos estados dos pinos
-  //Serial.println("testando encoder");
-  estado1 = digitalRead(encoderPino1);
-  estado2 = digitalRead(encoderPino2);
-  //Serial.println(estado1);
-  //Serial.println(estado2); 
-   if(oldEstado1 == LOW && oldEstado2 == HIGH && estado1 == LOW && estado2 == LOW){
-     oldEstado1 = estado1;
-     oldEstado2 = estado2;
-     Serial.println(estado1);
-     Serial.println(estado2);
-     Serial.println(oldEstado1);
-     Serial.println(oldEstado2);
-     return -1; //caso rotacao antihoraria
-     }
-     if(oldEstado1 == HIGH && oldEstado2 == LOW && estado1 == LOW && estado2 == LOW){
-     oldEstado1 = estado1;
-     oldEstado2 = estado2;
-     Serial.println(estado1);
-     Serial.println(estado2);
-     Serial.println(oldEstado1);
-     Serial.println(oldEstado2);
-     return 1; //caso rotacao antihoraria
-     }
-  oldEstado1 = estado1; 
-  oldEstado2 = estado2;
+  long newPosition = myEnc.read();
+  static long oldPosition;
+  if(newPosition == oldPosition + 4){
+  oldPosition = newPosition;
+  return 1;
   }
-  return 0; //caso sem mudanca de estado
+  if(newPosition == oldPosition - 4){
+  oldPosition = newPosition;
+  return -1;
+  }
+  return 0;
 }
 
 
@@ -468,20 +620,18 @@ void stepperRotate(float rotation, float rpm, bool motor) {
 
   if(motor == HIGH){
     for (unsigned long i = 0; i < totalSteps; i++) {
-    PORTB = PORTB | (1 << stepPinTopo - 8); //Se precisar usar pinos acima do 7 precisa mudar para PORTB
+    PORTB = PORTB | 0b00010000; //Se precisar usar pinos acima do 7 precisa mudar para PORTB
     delayMicroseconds(stepPeriodmicroSec);
-    PORTB = PORTB & ~(1 << stepPinTopo - 8);
+    PORTB = PORTB & ~0b00010000;
     delayMicroseconds(stepPeriodmicroSec);
     }
   }
   else{
     for (unsigned long i = 0; i < totalSteps; i++) {
-    PORTB = PORTB | (1 << (stepPinBase - 8)); //Se precisar usar pinos acima do 7 precisa mudar para PORTB abaixo de 7 PORTD
+    PORTB = PORTB | 0b00100000; //Se precisar usar pinos acima do 7 precisa mudar para PORTB abaixo de 7 PORTD
     delayMicroseconds(stepPeriodmicroSec);
-    PORTB = PORTB & ~(1 << stepPinBase - 8);
+    PORTB = PORTB & ~0b00100000;
     delayMicroseconds(stepPeriodmicroSec);
     }
   }
-  
-
 }

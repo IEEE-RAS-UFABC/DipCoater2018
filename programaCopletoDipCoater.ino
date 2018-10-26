@@ -14,10 +14,10 @@ const float stepSize = 0.5;//full=1, half=0.5, quarter=0.25, etc...
 //dados iniciais para menu
 bool saiu;
 char* menu [] = {"Start Padrao", "Menu"};
-char* optionSubMenu [] = {"Start", "Ciclos", "banhos", "velocidade", "Altura", "Tempo banho", "Tempo Secagem", "padroes"};
+char* optionSubMenu [] = {"Start", "Ciclos", "banhos", "velocidade", "Altura", "Tempo banho", "Tempo Secagem", "padroes", "Medir Distancia", "Levantar Garra"};
 char* padroes [] = {"Padrão 1",  "Padrão 2", "Padrão 3"};
 char* beckers [] = {"Becker 1",  "Becker 2", "Becker 3" , "Becker 4"};
-int variavel [] = {1, 2, 3, 4, 5, 6, 7, 8};
+int variavel [] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 int opt;
 String readOption = "Start Padrao";
 
@@ -146,11 +146,11 @@ void Submenu(bool voltar) {
     if (semovido != 0 || saiu == HIGH) {
       saiu = LOW;
       option = option + semovido;
-      if (option > 7) {
+      if (option > 9) {
         option = 0;
       }
       if (option < 0) {
-        option = 7;
+        option = 9;
       }
 
       lcd.clear();
@@ -217,20 +217,20 @@ void Submenu(bool voltar) {
           delay(50);
           break;
 
+        case 9:
+          funcMedirDistancia();
+          delay(50);
+          break;
+
+        case 10:
+          funcLevantarGarra();
+          delay(50);
+          break;
+
         default:
           Serial.println("Opcao invalida");
           Serial.println(opt);
       }
-      /*
-       Serial.println(optionSubMenu[option]);
-      if(variavel.equals(optionSubMenu[option])){   //melhorar a saida do menu...
-        Serial.print("escolha submenu: ");
-        Serial.println(submenu[0]);
-        voltar = true;
-        Serial.print("SAIU: ");
-        Serial.println(voltar);
-      }
-      */
     }
     if (digitalRead(botaoVoltar) == HIGH) {
       while (digitalRead(botaoVoltar) == HIGH) {
@@ -386,14 +386,20 @@ void funcStart() {
         lcd.setCursor(9, 1);
         lcd.print(" ");
         Serial.println("esperando banho");
-        for (int i = 0; i < 1000; i++) {
-          delay(tempoDeBanhoDeFuncionamento[banhoAtual]);
+        for (int i = 0; i < tempoDeBanhoDeFuncionamento[banhoAtual]; i++) {
+          delay(940);
+          int minutos = (tempoDeBanhoDeFuncionamento[banhoAtual] - i) / 60;
+          int segundos = (tempoDeBanhoDeFuncionamento[banhoAtual] - i) - (minutos * 60);
+          lcd.setCursor(9, 1);
+          lcd.print("       ");
+          delay(50);
+          lcd.print(String(minutos) + ":" + String(segundos));
         }
         Serial.println("acabou");
         stepperRotate(((alturaDeFuncionamento[banhoAtual] * -5) + (alturaSeguraDeFuncionamento * 5)), (velocidadeDeFuncionamento[banhoAtual] * 5), HIGH);
         Serial.println("esperando secagem");
-        for (int i = 0; i < 1000; i++) {
-          for (int j = 0; j < tempoDeSecagemDeFuncionamento[banhoAtual]; j++) {
+        for (int j = 0; j < tempoDeSecagemDeFuncionamento[banhoAtual]; j++) {
+          for (int i = 0; i < 940; i++) {
             delay(1);
             if (digitalRead(botaoSelecionar)) {
               pausado = HIGH;
@@ -404,14 +410,20 @@ void funcStart() {
               while (pausado == HIGH) {
                 if (digitalRead(botaoVoltar)) {
                   lcd.clear();
-              delay(25);
-              lcd.setCursor(0, 0);
-              lcd.print("continuando...");
+                  delay(25);
+                  lcd.setCursor(0, 0);
+                  lcd.print("continuando...");
                   pausado = LOW;
                 }
               }
             }
           }
+          int minutos = (tempoDeSecagemDeFuncionamento[banhoAtual] - j) / 60;
+          int segundos = (tempoDeSecagemDeFuncionamento[banhoAtual] - j) - (minutos * 60);
+          lcd.setCursor(9, 1);
+          lcd.print("       ");
+          delay(50);
+          lcd.print(String(minutos) + ":" + String(segundos));
 
         }
         Serial.println("acabou");
@@ -676,7 +688,7 @@ void funcTempoDeBanho() {
       while (rodando == LOW) {
         mudouuu = encoder();
         if (mudouuu != 0) {
-          tempoI = tempoI + mudouuu;
+          tempoI = tempoI + (mudouuu * 10);
           if (tempoI < 1) {
             tempoI = 1;
           }
@@ -734,7 +746,7 @@ void funcTempoDeSecagem() {
       while (rodando == LOW) {
         mudouuu = encoder();
         if (mudouuu != 0) {
-          tempoI = tempoI + mudouuu;
+          tempoI = tempoI + (mudouuu * 10);
           if (tempoI < 1) {
             tempoI = 1;
           }
@@ -762,9 +774,89 @@ void funcTempoDeSecagem() {
   }
   saiu = HIGH;
 }
-void funcPadrao() {
-  Serial.print("Inicia a função PADRAO");
-  //código para setar os diferentes tipos de padrões pre configurados (3 padrões)
+void funcLevantarGarra() {
+  while (digitalRead(fimDeCurcoTopo) == LOW) {
+    lcd.setCursor(9, 1);
+    lcd.print("^");
+    stepperRotate(-0.75, 260, HIGH);
+  }
+  lcd.setCursor(9, 1);
+  lcd.print(" ");
+}
+void funcMedirDistancia() {
+  int mudouuu;
+  int posicao = 0;
+  float mover = 0;
+  bool rodando = LOW;
+  lcd.clear();
+  delay(25);
+  lcd.setCursor(0, 0);
+  lcd.print("Medir distancia");
+  lcd.setCursor(0, 1);
+  lcd.print("Aguarde...");
+  while (digitalRead(fimDeCurcoTopo) == LOW) {
+    lcd.setCursor(9, 1);
+    lcd.print("^");
+    stepperRotate(-0.75, 260, HIGH);
+  }
+  lcd.setCursor(0, 1);
+  lcd.print("               ");
+  while (rodando == LOW) {
+    mudouuu = encoder();
+    if (mudouuu != 0) {
+      posicao = posicao + mudouuu;
+      if (posicao < 0) {
+        posicao = 0;
+      }
+      else {
+        mover = mover + (mudouuu * 5);
+      }
+      lcd.clear();
+      delay(25);
+      lcd.setCursor(0, 0);
+      lcd.print("Medir distancia");
+      lcd.setCursor(0, 1);
+      lcd.print("  ");
+      lcd.setCursor(0, 1);
+      lcd.print(posicao, DEC);
+      lcd.setCursor(4, 1);
+      lcd.print("Cm");
+    }
+    if (mover > 0) {
+      stepperRotate(0.5, 260, HIGH);
+      mover = mover - 0.5;
+    }
+    if (mover < 0) {
+      stepperRotate(-0.5, 260, HIGH);
+      mover = mover + 0.5;
+    }
+    stepperRotate(-0.75, 260, HIGH);
+    if (digitalRead(botaoSelecionar)) {
+      while (digitalRead(botaoSelecionar) == HIGH) {
+      }
+      rodando = HIGH;
+      while (digitalRead(fimDeCurcoTopo) == LOW) {
+        lcd.setCursor(9, 1);
+        lcd.print("^");
+        stepperRotate(-0.75, 260, HIGH);
+      }
+      lcd.setCursor(9, 1);
+      lcd.print(" ");
+    }
+    if (digitalRead(botaoVoltar)) {
+      while (digitalRead(botaoVoltar) == HIGH) {
+      }
+      rodando = HIGH;
+      while (digitalRead(fimDeCurcoTopo) == LOW) {
+        lcd.setCursor(9, 1);
+        lcd.print("^");
+        stepperRotate(-0.75, 260, HIGH);
+      }
+      lcd.setCursor(9, 1);
+      lcd.print(" ");
+    }
+  }
+  saiu = HIGH;
 }
 
 void funcBanhos() { //seta quantidade de banhos
@@ -848,7 +940,6 @@ void stepperRotate(float rotation, float rpm, bool motor) {
   unsigned long stepPeriodmicroSec = ((60.0000 / (rpm * stepsPerRotation)) * 1E6 / 2.0000) - 5; //caculando tempo de pulso para velocidade especifica
 
   if (motor == HIGH) {
-    PORTB = PORTB & ~0b00100000;
     for (unsigned long i = 0; i < totalSteps; i++) {
       PORTB = PORTB | 0b00010000; //Se precisar usar pinos acima do 7 precisa mudar para PORTB
       delayMicroseconds(stepPeriodmicroSec);
@@ -857,7 +948,6 @@ void stepperRotate(float rotation, float rpm, bool motor) {
     }
   }
   else {
-    PORTB = PORTB & ~0b00010000;
     for (unsigned long i = 0; i < totalSteps; i++) {
       PORTB = PORTB | 0b00100000; //Se precisar usar pinos acima do 7 precisa mudar para PORTB abaixo de 7 PORTD
       delayMicroseconds(stepPeriodmicroSec);
